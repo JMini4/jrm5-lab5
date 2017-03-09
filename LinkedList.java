@@ -30,9 +30,13 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public LinkedList()
     {
-	// Students: modify this code.
-	head = null;
-	tail = null;
+
+	head = new DoublyLinkedNode<E>(null);
+	tail = new DoublyLinkedNode<E>(null);
+	head.setPrevious(null);
+	tail.setNext(null);
+	head.setNext(tail);
+	tail.setPrevious(head);
 	count = 0;
     }
 
@@ -45,6 +49,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public int size()
     {
+	
 	return count;
     }
 
@@ -67,9 +72,9 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public void clear()
     {
-	// Students: modify this code
-        head = null; 
-	tail = null; 
+
+        head.setNext(tail); 
+	tail.setPrevious(head); 
 	count = 0;
     }
 
@@ -82,7 +87,9 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     protected void insertAfter(E value, DoublyLinkedNode<E> previous)
     {
-	// Students: write this code.
+	DoublyLinkedNode<E> newNode = new DoublyLinkedNode<E> (value);
+	previous.setNext(newNode);
+	count ++;
     }
 
     /**
@@ -94,7 +101,9 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     protected E remove(DoublyLinkedNode<E> node)
     {
-	// Students: write this code
+	node.previous().setNext(node.next());
+	node.next().setPrevious(node.previous());
+	count --;
 	return node.value();
     }
 
@@ -109,12 +118,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public void addFirst(E value)
     {
-	// Students: modify this code.
-	// construct a new element, making it the head
-	head = new DoublyLinkedNode<E>(value, head, null);
-	// fix tail, if necessary
-	if (tail == null) tail = head;
-	count++;
+       	insertAfter(value, head);
     }
 
     /**
@@ -127,12 +131,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public void addLast(E value)
     {
-	// Students: modify this code.
-	// construct new element
-	tail = new DoublyLinkedNode<E>(value, null, tail);
-	// fix up head
-	if (head == null) head = tail;
-	count++;
+	insertAfter(value, tail.previous());
     }
 
     /**
@@ -146,18 +145,8 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E removeFirst()
     {
-	// Students: modify this code.
-	Assert.pre(!isEmpty(),"List is not empty.");
-	DoublyLinkedNode<E> temp = head;
-	head = head.next();
-	if (head != null) {
-	    head.setPrevious(null);
-	} else {
-	    tail = null; // remove final value
-	}
-	temp.setNext(null);// helps clean things up; temp is free
-	count--;
-	return temp.value();
+	remove(head.next());
+	return(head.next().value());
     }
 
     /**
@@ -170,17 +159,8 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E removeLast()
     {
-	// Students: modify this code.
-	Assert.pre(!isEmpty(),"List is not empty.");
-	DoublyLinkedNode<E> temp = tail;
-	tail = tail.previous();
-	if (tail == null) {
-	    head = null;
-	} else {
-	    tail.setNext(null);
-	}
-	count--;
-	return temp.value();
+	remove(tail.previous());
+	return(tail.previous().value());
     }
 
     /**
@@ -194,7 +174,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
     public E getFirst()
     {
 	// Students: modify this code.
-	return head.value();
+	return head.next().value();
     }
 
     /**
@@ -208,7 +188,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
     public E getLast()
     {
 	// Students: modify this code.
-	return tail.value();
+	return tail.previous().value();
     }
 
     /**
