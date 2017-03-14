@@ -1,5 +1,34 @@
-// Implementation of lists, using doubly linked elements, and dummy nodes.
-// Starter class for List-based lab.
+/*
+Name: Julia Mini
+Lab: Thursday 1-4
+Lab 5
+*/
+
+/*
+Thought Questions
+
+1. The if statements disappear because instead of using the next and previous 
+parameters, we manually use setNext and setPrevious. By using these methods we
+know if the node is null or not. This method is used in step 2 of the lab. 
+
+2. You can't only use the contains method to write the method indexOf because
+you need more information than just a boolean to know the index of a 
+particular element in the doubly linked list.
+
+3. For the remove methods, we always pass the explicit node that we want
+to remove, never the node before or after, and never a dummy node. Therefore
+the same choice that can be made for inserting before or after some node
+does not apply to the remove methods.
+
+4. Any time that we want to add or remove an element from the linked list
+and the index of that element is more than halfway through the list, it
+would be faster to start looking for that element from the back of the list. 
+So it might be a good idea to have special separate cases for when the index
+is greater than or less that halfway through the list.
+
+5. The orginal file is bigger by around 30 lines.
+
+*/
 
 import structure5.Assert;
 import structure5.DoublyLinkedList;
@@ -72,7 +101,6 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public void clear()
     {
-
         head.setNext(tail); 
 	tail.setPrevious(head); 
 	count = 0;
@@ -88,7 +116,10 @@ public class LinkedList<E> extends DoublyLinkedList<E>
     protected void insertAfter(E value, DoublyLinkedNode<E> previous)
     {
 	DoublyLinkedNode<E> newNode = new DoublyLinkedNode<E> (value);
+	previous.next().setPrevious(newNode);
+	newNode.setNext(previous.next());
 	previous.setNext(newNode);
+	newNode.setPrevious(previous);
 	count ++;
     }
 
@@ -101,6 +132,8 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     protected E remove(DoublyLinkedNode<E> node)
     {
+	Assert.pre(node != null, "Node is not null");
+	Assert.pre(node != head && node != tail, "Node is not head or tail");
 	node.previous().setNext(node.next());
 	node.next().setPrevious(node.previous());
 	count --;
@@ -145,8 +178,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E removeFirst()
     {
-	remove(head.next());
-	return(head.next().value());
+	return remove(head.next());
     }
 
     /**
@@ -159,8 +191,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E removeLast()
     {
-	remove(tail.previous());
-	return(tail.previous().value());
+	return remove(tail.previous());
     }
 
     /**
@@ -173,7 +204,6 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E getFirst()
     {
-	// Students: modify this code.
 	return head.next().value();
     }
 
@@ -187,7 +217,6 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E getLast()
     {
-	// Students: modify this code.
 	return tail.previous().value();
     }
 
@@ -201,29 +230,13 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public void add(int i, E o)
     {
-	// Students: modify this code.
 	Assert.pre((0 <= i) &&
 		   (i <= size()), "Index in range.");
 	if (i == 0) addFirst(o);
 	else if (i == size()) addLast(o);
 	else {
-	    DoublyLinkedNode<E> before = null;
-	    DoublyLinkedNode<E> after = head;
-	    // search for ith position, or end of list
-	    while (i > 0)
-	    {
-		before = after;
-		after = after.next();
-		i--;
-	    }
-	    // create new value to insert in correct position
-	    DoublyLinkedNode<E> current =
-		new DoublyLinkedNode<E>(o,after,before);
-	    count++;
-	    // make after and before value point to new value
-	    before.setNext(current);
-	    after.setPrevious(current);
-	}
+	    insertAfter(o, getNode(i));
+     	}
     }
 
     /**
@@ -237,26 +250,26 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E remove(int i)
     {
-	// Students: modify this code.
 	Assert.pre((0 <= i) &&
 		   (i < size()), "Index in range.");
 	if (i == 0) return removeFirst();
 	else if (i == size()-1) return removeLast();
-	DoublyLinkedNode<E> previous = null;
-	DoublyLinkedNode<E> finger = head;
-	// search for the value indexed, keep track of previous
-	while (i > 0)
-	{
-	    previous = finger;
-	    finger = finger.next();
+	return remove(getNode(i));
+    }
+
+    /**
+     * helper method that returns a node given an 
+     * index
+     */
+    protected DoublyLinkedNode<E> getNode(int i){
+	DoublyLinkedNode<E> pointer = head.next();
+	while(i>0){
+	    pointer = pointer.next();
 	    i--;
 	}
-	previous.setNext(finger.next());
-	finger.next().setPrevious(previous);
-	count--;
-	// finger's value is old value, return it
-	return finger.value();
-    }
+	return pointer;
+    } 
+
 
     /**
      * Get the value at location i.
@@ -269,17 +282,8 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E get(int i)
     {
-	// Students: modify this code.
 	if (i >= size()) return null;
-	DoublyLinkedNode<E> finger = head;
-	// search for the ith element or end of list
-	while (i > 0)
-	{
-	    finger = finger.next();
-	    i--;
-	}
-	// not end of list, return the value found
-	return finger.value();
+	return getNode(i).value();
     }
 
     /**
@@ -293,16 +297,9 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E set(int i, E o)
     {
-	// Students: modify this code.
 	if (i >= size()) return null;
-	DoublyLinkedNode<E> finger = head;
-	// search for the ith element or the end of the list
-	while (i > 0)
-	{
-	    finger = finger.next();
-	    i--;
-	}
-	// get old value, update new value
+	DoublyLinkedNode<E> finger = getNode(i);
+       	// get old value, update new value
 	E result = finger.value();
 	finger.setValue(o);
 	return result;
@@ -320,17 +317,16 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public int indexOf(E value)
     {
-	// Students: modify this code.
 	int i = 0;
-	DoublyLinkedNode<E> finger = head;
+	DoublyLinkedNode<E> finger = head.next();
 	// search for value or end of list, counting along the way
-	while (finger != null && !finger.value().equals(value))
+	while (finger != tail && !finger.value().equals(value))
 	{
 	    finger = finger.next();
 	    i++;
 	}
 	// finger points to value, i is index
-	if (finger == null)
+	if (finger == tail)
 	{   // value not found, return indicator
 	    return -1;
 	} else {
@@ -351,16 +347,15 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public int lastIndexOf(E value)
     {
-	// Students: modify this code.
 	int i = size()-1;
-	DoublyLinkedNode<E> finger = tail;
+	DoublyLinkedNode<E> finger = tail.previous();
 	// search for the last matching value, result is desired index
-	while (finger != null && !finger.value().equals(value))
+	while (finger != head && !finger.value().equals(value))
 	{
 	    finger = finger.previous();
 	    i--;
 	}
-	if (finger == null)
+	if (finger == head)
 	{   // value not found, return indicator
 	    return -1;
 	} else {
@@ -380,13 +375,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public boolean contains(E value)
     {
-	// Students: modify this code.
-	DoublyLinkedNode<E> finger = head;
-	while ((finger != null) && (!finger.value().equals(value)))
-	{
-	    finger = finger.next();
-	}
-	return finger != null;
+	return indexOf(value) != -1;
     }
 
     /**
@@ -402,24 +391,23 @@ public class LinkedList<E> extends DoublyLinkedList<E>
      */
     public E remove(E value)
     {
-	// Students: modify this code.
-	DoublyLinkedNode<E> finger = head;
-	while (finger != null &&
+	DoublyLinkedNode<E> finger = head.next();
+	while (finger != tail &&
 	       !finger.value().equals(value))
 	{
 	    finger = finger.next();
 	}
-	if (finger != null)
+	if (finger != tail)
 	{
 	    // fix next field of element above
-	    if (finger.previous() != null)
+	    if (finger.previous() != head)
 	    {
 		finger.previous().setNext(finger.next());
 	    } else {
 		head = finger.next();
 	    }
 	    // fix previous field of element below
-	    if (finger.next() != null)
+	    if (finger.next() != tail)
 	    {
 		finger.next().setPrevious(finger.previous());
 	    } else {
@@ -441,6 +429,7 @@ public class LinkedList<E> extends DoublyLinkedList<E>
     public Iterator<E> iterator()
     {
 	// Students: This code should not be modified
+	
 	return new DoublyLinkedListIterator<E>(head,tail);
     }
 

@@ -38,7 +38,7 @@ public class TestLinkedList {
 		compareList("0 0 1 1 2 2 3 3 4 4 5 5", list);
 
 		for (int i = 0; i <= 5; i++) {
-			list.remove(i);
+		    list.remove(i);
 		}
 		compareList("0 1 2 3 4 5", list);
 
